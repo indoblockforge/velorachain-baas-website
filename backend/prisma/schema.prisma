@@ -1,6 +1,0 @@
-model PlaygroundSnippet {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  request   Json
-  response  Json
-}
