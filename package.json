@@ -1,10 +1,60 @@
 {
-  "name": "leap-app",
+  "name": "velorachain-playground",
   "version": "1.0.0",
-  "type": "module",
-  "packageManager": "bun",
-  "workspaces": [
-    "backend",
-    "frontend"
-  ]
+  "private": true,
+  "description": "Live Playground API/SDK untuk VeloraChain - Next.js, React, Swagger UI, Monaco Editor.",
+  "author": "Indoblockforge",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/indoblockforge/velorachain-playground.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "test": "jest",
+    "openapi:generate": "node scripts/generate-openapi.js",
+    "openapi:validate": "npx swagger-cli validate openapi.json",
+    "docker:build": "docker build -t indoblockforge/playground:latest .",
+    "docker:push": "docker push indoblockforge/playground:latest"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.8.3",
+    "next": "^14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "swagger-ui-react": "^5.7.2",
+    "next-auth": "^4.22.1",
+    "copy-to-clipboard": "^3.3.2",
+    "axios": "^1.6.7",
+    "classnames": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.35",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "eslint": "^8.53.0",
+    "eslint-config-next": "^14.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.1",
+    "swagger-cli": "^5.0.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.2"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/frontend/$1"
+    }
+  }
 }
