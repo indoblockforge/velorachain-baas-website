@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
+import React from 'react';
 
+// --- Types ---
 interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
@@ -11,10 +13,24 @@ type BreadcrumbData = Record<string, any>;
 type PerformanceLevel = 'info' | 'warning' | 'error';
 
 // --- Sentry Initialization ---
+/**
+ * Inisialisasi Sentry untuk monitoring error dan performance.
+ * Pastikan variable lingkungan sudah disanitasi dan valid.
+ */
 export function initSentry() {
+  const dsn = import.meta.env.VITE_SENTRY_DSN || process.env.VITE_SENTRY_DSN;
+  const environment = import.meta.env.MODE || process.env.NODE_ENV || 'development';
+  const release = import.meta.env.VITE_APP_VERSION || process.env.VITE_APP_VERSION || 'dev';
+
+  if (!dsn) {
+    console.warn('Sentry DSN is not defined. Monitoring is disabled.');
+    return;
+  }
+
   Sentry.init({
-    dsn: process.env.VITE_SENTRY_DSN,
-    environment: process.env.NODE_ENV,
+    dsn,
+    environment,
+    release,
     integrations: [
       new BrowserTracing({
         routingInstrumentation: Sentry.reactRouterV6Instrumentation(
@@ -24,17 +40,17 @@ export function initSentry() {
         ),
       }),
     ],
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
     replaysSessionSampleRate: 0.01,
     replaysOnErrorSampleRate: 1.0,
-    release: process.env.VITE_APP_VERSION,
     beforeSend(event, hint) {
-      if (process.env.NODE_ENV === 'production') {
+      // Filter error yang umum dan tidak relevan
+      if (environment === 'production') {
         const error = hint.originalException;
         if (
           event.exception &&
           error instanceof TypeError &&
-          error.message.includes('fetch')
+          error.message?.includes('fetch')
         ) {
           return null;
         }
@@ -54,6 +70,9 @@ export function initSentry() {
 }
 
 // --- Error Boundary ---
+/**
+ * Komponen ErrorBoundary dengan fallback yang bisa dikustomisasi.
+ */
 export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
   children,
   fallback,
@@ -108,16 +127,28 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
 );
 
 // --- Sentry Utilities ---
+/**
+ * Rekam error secara manual ke Sentry.
+ */
 export const captureError = (error: Error, context?: Record<string, any>) =>
   Sentry.captureException(error, { extra: context });
 
+/**
+ * Rekam pesan custom ke Sentry.
+ */
 export const captureMessage = (
   message: string,
   level: PerformanceLevel = 'info'
 ) => Sentry.captureMessage(message, level);
 
+/**
+ * Set informasi user pada Sentry scope.
+ */
 export const setUserContext = (user: UserContext) => Sentry.setUser(user);
 
+/**
+ * Tambahkan breadcrumb (jejak peristiwa) ke Sentry.
+ */
 export const addBreadcrumb = (
   message: string,
   category?: string,
@@ -132,9 +163,15 @@ export const addBreadcrumb = (
 };
 
 // --- Performance Monitoring ---
+/**
+ * Mulai transaksi performance Sentry.
+ */
 export const startTransaction = (name: string, op: string) =>
   Sentry.startTransaction({ name, op });
 
+/**
+ * Ukur performa fungsi async dan laporkan ke Sentry.
+ */
 export const measurePerformance = async <T>(
   name: string,
   operation: () => Promise<T>
@@ -153,6 +190,9 @@ export const measurePerformance = async <T>(
 };
 
 // --- Web Vitals Monitoring ---
+/**
+ * Inisialisasi monitoring Web Vitals dan rekam ke Sentry.
+ */
 export const initWebVitals = () => {
   import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
     const breadcrumb = (name: string, metric: any) =>
