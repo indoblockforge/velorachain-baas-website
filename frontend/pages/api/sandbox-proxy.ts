@@ -1,13 +1,18 @@
+import { getToken } from "next-auth/jwt";
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const VELORA_API_BASE = 'https://api.velora/sandbox';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Validasi session user
+  const token = await getToken({ req });
+  if (!token) return res.status(401).json({ error: 'Unauthorized: Please login!' });
+
   const { endpoint } = req.query;
   const method = req.method || 'GET';
   const url = `${VELORA_API_BASE}${endpoint}`;
   const headers: any = {
-    Authorization: req.headers.authorization || '',
+    Authorization: `Bearer ${token.accessToken || ''}`,
     'Content-Type': 'application/json',
   };
 
@@ -25,4 +30,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
-}
+        }
